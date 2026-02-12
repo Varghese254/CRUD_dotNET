@@ -119,3 +119,141 @@ Example body:
 Then refresh React page->
 You should see:
 John - john@example.com
+
+
+*******************************
+React (Frontend)
+        ↓ HTTP (Axios)
+ASP.NET Core API (Controller)
+        ↓
+Repository
+        ↓
+Dapper
+        ↓
+MySQL Database
+***********************************
+Excellent question 👌🔥
+Now you’re thinking like a real developer.
+
+I’ll explain the complete flow of your full-stack app from browser → React → API → Dapper → MySQL → back to UI.
+
+🧠 High Level Architecture
+React (Frontend)
+        ↓ HTTP (Axios)
+ASP.NET Core API (Controller)
+        ↓
+Repository
+        ↓
+Dapper
+        ↓
+MySQL Database
+
+
+Now let’s go step-by-step.
+
+🟢 1️⃣ When You Open http://localhost:5173
+
+React loads.
+
+main.jsx
+
+This is the entry point.
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+
+👉 It renders <App /> component.
+
+🟢 2️⃣ App.jsx Runs
+
+Inside App.jsx:
+
+useEffect(() => {
+  api.get("/user")
+    .then(res => setUsers(res.data))
+}, []);
+
+What happens?
+
+useEffect runs once (because [])
+
+It calls:
+
+GET http://localhost:5144/api/user
+
+
+(using Axios instance from api.js)
+
+🟢 3️⃣ Axios (api.js)
+
+Your api.js:
+
+export default axios.create({
+  baseURL: "http://localhost:5144/api"
+});
+
+
+So when you do:
+
+api.get("/user")
+
+
+It becomes:
+
+http://localhost:5144/api/user
+
+🟢 4️⃣ Request Hits ASP.NET Backend
+
+Now backend receives:
+
+GET /api/user
+
+
+It matches this controller:
+
+[Route("api/[controller]")]
+public class UserController : ControllerBase
+
+
+[controller] = user
+
+So route becomes:
+
+api/user
+
+🟢 5️⃣ Controller Executes
+[HttpGet]
+public async Task<IActionResult> GetUsers()
+{
+    var users = await _repository.GetAll();
+    return Ok(users);
+}
+
+
+Controller:
+
+Calls repository
+
+Gets users
+
+Returns JSON response
+
+🟢 6️⃣ Repository Executes
+
+Inside UserRepository:
+
+public async Task<IEnumerable<User>> GetAll()
+{
+    var query = "SELECT * FROM Users";
+    using var connection = _context.CreateConnection();
+    return await connection.QueryAsync<User>(query);
+}
+
+What happens here?
+
+_context.CreateConnection()
+→ Opens MySQL connection
+
+QueryAsync<User>()
+→ Dapper runs SQL query
+→ Maps each row to User object

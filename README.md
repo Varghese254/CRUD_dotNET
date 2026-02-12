@@ -1,7 +1,9 @@
-first commit msg
-in the backend folder type cmds below:
+For Running-> react: npm run dev
+             dotnet: dotnet run
 
-dotnet new webapi -n CrudApi --framework net8.0
+*******************************************************
+In the backend folder type cmds below:
+" dotnet new webapi -n CrudApi --framework net8.0 "
 
 backend/
    └── CrudApi/

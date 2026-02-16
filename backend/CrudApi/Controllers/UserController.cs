@@ -17,6 +17,7 @@ namespace CrudApi.Controllers
             _repository = repository;
         }
 
+        // ================= REGISTER =================
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto dto)
         {
@@ -32,12 +33,36 @@ namespace CrudApi.Controllers
                 Name = dto.Name,
                 Email = dto.Email,
                 Password = hashedPassword,
-                Role = "user"
+                Role = "user" // default role
             };
 
             await _repository.Create(user);
 
             return Ok(new { message = "User registered successfully" });
+        }
+
+        // ================= LOGIN =================
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginDto dto)
+        {
+            var user = await _repository.GetByEmail(dto.Email);
+
+            if (user == null)
+                return Unauthorized(new { message = "User not found" });
+
+            // 🔐 Correct BCrypt verification
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.Password);
+
+            if (!isPasswordValid)
+                return Unauthorized(new { message = "Invalid password" });
+
+            return Ok(new
+            {
+                user.Id,
+                user.Name,
+                user.Email,
+                user.Role
+            });
         }
     }
 }

@@ -3,6 +3,11 @@ using CrudApi.Repositories;
 using CrudApi.Models;
 using CrudApi.DTOs;
 using BCrypt.Net;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
 
 namespace CrudApi.Controllers
 {
@@ -12,10 +17,14 @@ namespace CrudApi.Controllers
     {
         private readonly UserRepository _repository;
 
-        public UserController(UserRepository repository)
-        {
-            _repository = repository;
-        }
+       private readonly IConfiguration _configuration;
+
+public UserController(UserRepository repository, IConfiguration configuration)
+{
+    _repository = repository;
+    _configuration = configuration;
+}
+
 
         // ================= REGISTER =================
         [HttpPost("register")]
@@ -42,27 +51,55 @@ namespace CrudApi.Controllers
         }
 
         // ================= LOGIN =================
-        [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto dto)
-        {
-            var user = await _repository.GetByEmail(dto.Email);
+       [HttpPost("login")]
+public async Task<IActionResult> Login(LoginDto dto)
+{
+    var user = await _repository.GetByEmail(dto.Email);
 
-            if (user == null)
-                return Unauthorized(new { message = "User not found" });
+    if (user == null)
+        return Unauthorized(new { message = "User not found" });
 
-            // 🔐 Correct BCrypt verification
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.Password);
+    bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.Password);
 
-            if (!isPasswordValid)
-                return Unauthorized(new { message = "Invalid password" });
+    if (!isPasswordValid)
+        return Unauthorized(new { message = "Invalid password" });
 
-            return Ok(new
-            {
-                user.Id,
-                user.Name,
-                user.Email,
-                user.Role
-            });
-        }
+    // 🔐 Generate JWT
+    var claims = new[]
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Name, user.Name),
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Role, user.Role)
+    };
+
+    var key = new SymmetricSecurityKey(
+        Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])
+    );
+
+    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+    var token = new JwtSecurityToken(
+        issuer: _configuration["Jwt:Issuer"],
+        audience: _configuration["Jwt:Audience"],
+        claims: claims,
+        expires: DateTime.Now.AddMinutes(
+        Convert.ToDouble(_configuration["Jwt:DurationInMinutes"])
+      ),
+        signingCredentials: creds
+    );
+
+    var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+    return Ok(new
+    {
+        token = jwtToken,
+        user.Id,
+        user.Name,
+        user.Email,
+        user.Role
+    });
+}
+
     }
 }

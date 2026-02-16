@@ -1,9 +1,30 @@
+import UserHeader from "./UserHeader";
+import UserFooter from "./UserFooter";
+
 function UserHome() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sky-600 text-white">
-      <h1 className="text-4xl font-bold">User Dashboard</h1>
+    <div style={styles.container}>
+      <UserHeader />
+
+      <main style={styles.main}>
+        <h1>Welcome User</h1>
+      </main>
+
+      <UserFooter />
     </div>
   );
 }
+
+const styles = {
+  container: {
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+  },
+  main: {
+    flex: 1,
+    padding: "30px",
+  },
+};
 
 export default UserHome;

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using CrudApi.Repositories;
 using CrudApi.Models;
+using CrudApi.DTOs;
+using BCrypt.Net;
 
 namespace CrudApi.Controllers
 {
@@ -15,18 +17,27 @@ namespace CrudApi.Controllers
             _repository = repository;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetUsers()
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterDto dto)
         {
-            var users = await _repository.GetAll();
-            return Ok(users);
-        }
+            var existingUser = await _repository.GetByEmail(dto.Email);
 
-        [HttpPost]
-        public async Task<IActionResult> Create(User user)
-        {
+            if (existingUser != null)
+                return BadRequest(new { message = "Email already exists" });
+
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
+            var user = new User
+            {
+                Name = dto.Name,
+                Email = dto.Email,
+                Password = hashedPassword,
+                Role = "user"
+            };
+
             await _repository.Create(user);
-            return Ok();
+
+            return Ok(new { message = "User registered successfully" });
         }
     }
 }

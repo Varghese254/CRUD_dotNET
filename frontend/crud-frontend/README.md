@@ -14,3 +14,58 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+
+CRUD_DOTNET/
+└── backend/
+    └── CrudApi/
+        ├── bin/
+        ├── Controllers/
+        │   └── UserController.cs
+        ├── Data/
+        │   └── DapperContext.cs
+        ├── DTOs/
+        ├── Models/
+        │   └── User.cs
+        ├── obj/
+        ├── Properties/
+        │   └── launchSettings.json
+        ├── Repositories/
+        │   └── UserRepository.cs
+        ├── Services/
+        ├── appsettings.Development.json
+        ├── appsettings.json
+        ├── CrudApi.csproj
+        ├── CrudApi.http
+        └── Program.cs
+
+
+
+frontend/
+└── crud-frontend/
+    ├── node_modules/
+    ├── public/
+    │   └── vite.svg
+    ├── src/
+    │   ├── assets/
+    │   │   └── react.svg
+    │   ├── pages/
+    │   │   ├── Signin.jsx
+    │   │   ├── Signup.jsx
+    │   │   └── Welcome.jsx
+    │   ├── api.js
+    │   ├── App.css
+    │   ├── App.jsx
+    │   ├── index.css
+    │   ├── main.jsx
+    │   └── output.css
+    ├── .gitignore
+    ├── eslint.config.js
+    ├── index.html
+    ├── package-lock.json
+    ├── package.json
+    ├── postcss.config.js
+    ├── README.md
+    ├── tailwind.config.js
+    └── vite.config.js

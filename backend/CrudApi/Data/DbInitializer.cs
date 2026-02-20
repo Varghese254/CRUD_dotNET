@@ -47,6 +47,24 @@ namespace CrudApi.Data
                 );";
 
             connection.Execute(createIncomesTable);
+
+
+             // Create expenses table
+            var createExpensesTable = @"
+                CREATE TABLE IF NOT EXISTS expenses (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    user_id INT NOT NULL,
+                    amount DECIMAL(10,2) NOT NULL,
+                    category VARCHAR(50) NOT NULL,
+                    date DATE NOT NULL,
+                    description TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    INDEX idx_user_date (user_id, date)
+                );";
+
+            connection.Execute(createExpensesTable);
         }
     }
 }

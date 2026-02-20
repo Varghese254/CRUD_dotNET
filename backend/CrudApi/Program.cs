@@ -17,6 +17,7 @@ builder.Services.AddScoped<DbInitializer>();
 builder.Services.AddScoped<DapperContext>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<IncomeRepository>();
+builder.Services.AddScoped<ExpenseRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>(); // Add Email Service
 
 builder.Services.AddCors(options =>

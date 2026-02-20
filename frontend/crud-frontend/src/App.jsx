@@ -9,14 +9,15 @@ import AdminHome from "./pages/admin/AdminHome";
 import UserHome from "./pages/user/UserHome";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Import only the pages that exist
+// Import Income Pages
 import IncomeList from "./pages/user/income/IncomeList";
 import AddIncome from "./pages/user/income/AddIncome";
-// import EditIncome from "./pages/user/income/EditIncome"; // Comment out until created
+// import EditIncome from "./pages/user/income/EditIncome";
 
-// import ExpenseList from "./pages/user/expense/ExpenseList"; // Comment out until created
-// import AddExpense from "./pages/user/expense/AddExpense"; // Comment out until created
-// import EditExpense from "./pages/user/expense/EditExpense"; // Comment out until created
+// Import Expense Pages
+import ExpenseList from "./pages/user/expense/ExpenseList";
+import AddExpense from "./pages/user/expense/AddExpense";
+import EditExpense from "./pages/user/expense/EditExpense";
 
 function App() {
   return (
@@ -51,7 +52,7 @@ function App() {
         }
       />
 
-      {/* Income Routes - Only add the ones that exist */}
+      {/* Income Routes */}
       <Route
         path="/user/income"
         element={
@@ -70,18 +71,8 @@ function App() {
         }
       />
       
-      {/* Comment out edit route until file exists */}
-      {/* <Route
-        path="/user/income/edit/:id"
-        element={
-          <ProtectedRoute role="user">
-            <EditIncome />
-          </ProtectedRoute>
-        }
-      /> */}
-
-      {/* Comment out expense routes until files exist */}
-      {/* <Route
+      {/* Expense Routes */}
+      <Route
         path="/user/expenses"
         element={
           <ProtectedRoute role="user">
@@ -106,7 +97,7 @@ function App() {
             <EditExpense />
           </ProtectedRoute>
         }
-      /> */}
+      />
 
       {/* Catch all - redirect to home */}
       <Route path="*" element={<Navigate to="/" replace />} />

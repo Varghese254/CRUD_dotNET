@@ -12,7 +12,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // Import Income Pages
 import IncomeList from "./pages/user/income/IncomeList";
 import AddIncome from "./pages/user/income/AddIncome";
-// import EditIncome from "./pages/user/income/EditIncome";
+import EditIncome from "./pages/user/income/EditIncome"; // Uncommented
 
 // Import Expense Pages
 import ExpenseList from "./pages/user/expense/ExpenseList";
@@ -71,6 +71,16 @@ function App() {
         }
       />
       
+      {/* Edit Income Route - Now uncommented */}
+      <Route
+        path="/user/income/edit/:id"
+        element={
+          <ProtectedRoute role="user">
+            <EditIncome />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Expense Routes */}
       <Route
         path="/user/expenses"

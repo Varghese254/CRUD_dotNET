@@ -12,9 +12,6 @@ function UserFooter() {
   return (
     <footer style={styles.footer}>
       <div>© 2026 FinTrack. All rights reserved.</div>
-      <button onClick={handleLogout} style={styles.button}>
-        Logout
-      </button>
     </footer>
   );
 }

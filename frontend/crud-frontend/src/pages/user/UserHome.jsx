@@ -6,7 +6,7 @@ import api from "../../api";
 import { 
   DollarSign, TrendingUp, TrendingDown, Wallet, 
   PlusCircle, PieChart, List, Home, 
-  BarChart3, Target, Settings, LogOut 
+  BarChart3, Target, Settings
 } from 'lucide-react';
 
 function UserHome() {
@@ -16,7 +16,8 @@ function UserHome() {
       totalIncome: 0,
       totalExpense: 0,
       balance: 0,
-      budgetUsed: 0
+      monthlySavings: 0,
+      savingsRate: 0
     },
     budgets: [],
     categoryExpenses: [],
@@ -24,6 +25,7 @@ function UserHome() {
     recentTransactions: []
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
 
   useEffect(() => {
@@ -31,16 +33,54 @@ function UserHome() {
   }, []);
 
   const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get('/user/dashboard');
-      setDashboardData(response.data);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    setError('');
+    
+    // Check if user is logged in
+    const token = localStorage.getItem("token");
+    const userStr = localStorage.getItem("user");
+    
+    console.log('Auth Check:', { 
+      hasToken: !!token, 
+      hasUser: !!userStr,
+      token: token ? `${token.substring(0, 20)}...` : 'No token'
+    });
+    
+    if (!token || !userStr) {
+      console.log('No token or user found, redirecting to login');
+      navigate('/signin');
+      return;
     }
-  };
+    
+    const currentDate = new Date();
+    const response = await api.get('/dashboard', {
+      params: { 
+        month: currentDate.getMonth() + 1, 
+        year: currentDate.getFullYear() 
+      }
+    });
+    
+    console.log('Dashboard data received:', response.data);
+    setDashboardData(response.data);
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    
+    if (error.response?.status === 401) {
+      setError('Your session has expired. Please login again.');
+      // Clear invalid data
+      localStorage.clear();
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        navigate('/signin');
+      }, 2000);
+    } else {
+      setError('Failed to load dashboard data. Please try again.');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Get current month and year
   const currentMonth = new Date().toLocaleString('default', { month: 'long' });
@@ -60,6 +100,24 @@ function UserHome() {
     { id: 'bucketlist', label: 'Bucket List', icon: Target, path: '/user/bucketlist' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/user/settings' }
   ];
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
 
   if (loading) {
     return (
@@ -108,6 +166,15 @@ function UserHome() {
 
         {/* Main Content Area */}
         <main style={styles.main}>
+          {error && (
+            <div style={styles.errorContainer}>
+              <p style={styles.errorText}>{error}</p>
+              <button onClick={fetchDashboardData} style={styles.retryButton}>
+                Retry
+              </button>
+            </div>
+          )}
+
           {hasNoData ? (
             <div style={styles.welcomeContainer}>
               <Wallet size={64} style={styles.welcomeIcon} />
@@ -165,7 +232,7 @@ function UserHome() {
                     <div>
                       <p style={styles.cardLabel}>Total Income</p>
                       <p style={{...styles.cardValue, color: '#10b981'}}>
-                        ${dashboardData.summary.totalIncome.toFixed(2)}
+                        {formatCurrency(dashboardData.summary.totalIncome)}
                       </p>
                     </div>
                     <div style={{...styles.cardIcon, backgroundColor: '#d1fae5'}}>
@@ -179,7 +246,7 @@ function UserHome() {
                     <div>
                       <p style={styles.cardLabel}>Total Expenses</p>
                       <p style={{...styles.cardValue, color: '#ef4444'}}>
-                        ${dashboardData.summary.totalExpense.toFixed(2)}
+                        {formatCurrency(dashboardData.summary.totalExpense)}
                       </p>
                     </div>
                     <div style={{...styles.cardIcon, backgroundColor: '#fee2e2'}}>
@@ -191,16 +258,26 @@ function UserHome() {
                 <div style={styles.summaryCard}>
                   <div style={styles.cardContent}>
                     <div>
-                      <p style={styles.cardLabel}>Balance</p>
+                      <p style={styles.cardLabel}>Current Balance</p>
                       <p style={{
                         ...styles.cardValue,
-                        color: dashboardData.summary.balance >= 0 ? '#3b82f6' : '#ef4444'
+                        color: dashboardData.summary.balance >= 0 ? '#10b981' : '#ef4444'
                       }}>
-                        ${dashboardData.summary.balance.toFixed(2)}
+                        {dashboardData.summary.balance >= 0 ? '+' : '-'}
+                        {formatCurrency(Math.abs(dashboardData.summary.balance))}
+                      </p>
+                      <p style={styles.savingsRate}>
+                        Savings Rate: {dashboardData.summary.savingsRate}%
                       </p>
                     </div>
-                    <div style={{...styles.cardIcon, backgroundColor: '#dbeafe'}}>
-                      <DollarSign color="#3b82f6" size={24} />
+                    <div style={{
+                      ...styles.cardIcon, 
+                      backgroundColor: dashboardData.summary.balance >= 0 ? '#d1fae5' : '#fee2e2'
+                    }}>
+                      <DollarSign 
+                        color={dashboardData.summary.balance >= 0 ? "#10b981" : "#ef4444"} 
+                        size={24} 
+                      />
                     </div>
                   </div>
                 </div>
@@ -208,9 +285,9 @@ function UserHome() {
                 <div style={styles.summaryCard}>
                   <div style={styles.cardContent}>
                     <div>
-                      <p style={styles.cardLabel}>Budget Used</p>
+                      <p style={styles.cardLabel}>Monthly Savings</p>
                       <p style={{...styles.cardValue, color: '#8b5cf6'}}>
-                        {dashboardData.summary.budgetUsed}%
+                        {formatCurrency(dashboardData.summary.monthlySavings)}
                       </p>
                     </div>
                     <div style={{...styles.cardIcon, backgroundColor: '#ede9fe'}}>
@@ -221,7 +298,7 @@ function UserHome() {
               </div>
 
               {/* Budget Progress Section */}
-              {dashboardData.budgets.length > 0 && (
+              {dashboardData.budgets && dashboardData.budgets.length > 0 && (
                 <div style={styles.sectionCard}>
                   <h2 style={styles.sectionTitle}>Budget Progress</h2>
                   <div style={styles.budgetList}>
@@ -230,7 +307,7 @@ function UserHome() {
                         <div style={styles.budgetHeader}>
                           <span style={styles.budgetCategory}>{budget.category}</span>
                           <span style={styles.budgetAmount}>
-                            ${budget.spent.toFixed(2)} / ${budget.limit.toFixed(2)}
+                            {formatCurrency(budget.spent)} / {formatCurrency(budget.budget)}
                             <span style={styles.budgetPercentage}>
                               ({budget.percentage}%)
                             </span>
@@ -251,7 +328,12 @@ function UserHome() {
                         </div>
                         {budget.percentage > 100 && (
                           <p style={styles.exceededText}>
-                            Exceeded by ${(budget.spent - budget.limit).toFixed(2)}
+                            Exceeded by {formatCurrency(budget.spent - budget.budget)}
+                          </p>
+                        )}
+                        {budget.remaining > 0 && budget.percentage < 100 && (
+                          <p style={styles.remainingText}>
+                            Remaining: {formatCurrency(budget.remaining)}
                           </p>
                         )}
                       </div>
@@ -265,21 +347,21 @@ function UserHome() {
                 {/* Category Breakdown */}
                 <div style={styles.sectionCard}>
                   <h2 style={styles.sectionTitle}>Spending by Category</h2>
-                  {dashboardData.categoryExpenses.length > 0 ? (
+                  {dashboardData.categoryExpenses && dashboardData.categoryExpenses.length > 0 ? (
                     <div style={styles.categoryList}>
                       {dashboardData.categoryExpenses.map((cat) => (
                         <div key={cat.category} style={styles.categoryItem}>
                           <div style={styles.categoryHeader}>
                             <span style={styles.categoryName}>{cat.category}</span>
                             <span style={styles.categoryAmount}>
-                              ${cat.amount.toFixed(2)}
+                              {formatCurrency(cat.amount)} ({cat.percentage}%)
                             </span>
                           </div>
                           <div style={styles.progressBarContainer}>
                             <div
                               style={{
                                 ...styles.progressBar,
-                                width: `${(cat.amount / dashboardData.summary.totalExpense * 100)}%`,
+                                width: `${cat.percentage}%`,
                                 backgroundColor: '#3b82f6'
                               }}
                             ></div>
@@ -307,19 +389,29 @@ function UserHome() {
                     </button>
                   </div>
                   
-                  {dashboardData.recentTransactions.length > 0 ? (
+                  {dashboardData.recentTransactions && dashboardData.recentTransactions.length > 0 ? (
                     <div style={styles.transactionList}>
                       {dashboardData.recentTransactions.map((transaction) => (
-                        <div key={transaction.id} style={styles.transactionItem}>
+                        <div 
+                          key={`${transaction.type}-${transaction.id}`} 
+                          style={styles.transactionItem}
+                          onClick={() => navigate(
+                            transaction.type === 'income' 
+                              ? `/user/income/edit/${transaction.id}`
+                              : `/user/expenses/edit/${transaction.id}`
+                          )}
+                        >
                           <div style={styles.transactionInfo}>
                             <div style={{
                               ...styles.transactionDot,
                               backgroundColor: transaction.type === 'income' ? '#10b981' : '#ef4444'
                             }}></div>
                             <div>
-                              <p style={styles.transactionDesc}>{transaction.description}</p>
+                              <p style={styles.transactionDesc}>
+                                {transaction.description || transaction.category}
+                              </p>
                               <p style={styles.transactionMeta}>
-                                {new Date(transaction.date).toLocaleDateString()} • {transaction.category}
+                                {formatDate(transaction.date)} • {transaction.category}
                               </p>
                             </div>
                           </div>
@@ -327,7 +419,8 @@ function UserHome() {
                             ...styles.transactionAmount,
                             color: transaction.type === 'income' ? '#10b981' : '#ef4444'
                           }}>
-                            {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                            {transaction.type === 'income' ? '+' : '-'}
+                            {formatCurrency(transaction.amount)}
                           </p>
                         </div>
                       ))}
@@ -342,7 +435,7 @@ function UserHome() {
               </div>
 
               {/* Top Spending Categories */}
-              {dashboardData.topCategories.length > 0 && (
+              {dashboardData.topCategories && dashboardData.topCategories.length > 0 && (
                 <div style={styles.sectionCard}>
                   <h2 style={styles.sectionTitle}>Top Spending Categories</h2>
                   <div style={styles.topCategoriesGrid}>
@@ -352,11 +445,23 @@ function UserHome() {
                           <span style={styles.topCategoryRank}>#{index + 1}</span>
                           <span style={styles.topCategoryName}>{cat.category}</span>
                         </div>
-                        <p style={styles.topCategoryAmount}>${cat.amount.toFixed(2)}</p>
+                        <p style={styles.topCategoryAmount}>{formatCurrency(cat.amount)}</p>
                         <p style={styles.topCategoryPercentage}>{cat.percentage}% of total</p>
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Savings Tip */}
+              {dashboardData.summary.balance !== 0 && (
+                <div style={styles.tipCard}>
+                  <h3 style={styles.tipTitle}>💡 Savings Tip</h3>
+                  <p style={styles.tipText}>
+                    {dashboardData.summary.balance > 0 
+                      ? `Great job! You saved ${formatCurrency(dashboardData.summary.balance)} this month. Keep it up!`
+                      : `You spent ${formatCurrency(Math.abs(dashboardData.summary.balance))} more than you earned. Try to reduce expenses in your top categories.`}
+                  </p>
                 </div>
               )}
             </div>
@@ -433,6 +538,29 @@ const styles = {
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
     marginBottom: "16px",
+  },
+  errorContainer: {
+    backgroundColor: "#fee2e2",
+    border: "1px solid #ef4444",
+    borderRadius: "8px",
+    padding: "16px",
+    marginBottom: "20px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  errorText: {
+    color: "#b91c1c",
+    margin: 0,
+  },
+  retryButton: {
+    backgroundColor: "#ef4444",
+    color: "white",
+    border: "none",
+    padding: "8px 16px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
   },
   welcomeContainer: {
     textAlign: "center",
@@ -544,6 +672,11 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
   },
+  savingsRate: {
+    fontSize: "12px",
+    color: "#6b7280",
+    marginTop: "4px",
+  },
   sectionCard: {
     backgroundColor: "white",
     borderRadius: "10px",
@@ -568,6 +701,9 @@ const styles = {
     color: "#3b82f6",
     fontSize: "14px",
     cursor: "pointer",
+    padding: "4px 8px",
+    borderRadius: "4px",
+    transition: "background-color 0.2s",
   },
   budgetList: {
     display: "flex",
@@ -610,6 +746,11 @@ const styles = {
     color: "#ef4444",
     marginTop: "4px",
   },
+  remainingText: {
+    fontSize: "12px",
+    color: "#10b981",
+    marginTop: "4px",
+  },
   twoColumnGrid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -648,20 +789,22 @@ const styles = {
   transactionList: {
     display: "flex",
     flexDirection: "column",
-    gap: "12px",
+    gap: "8px",
   },
   transactionItem: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "8px",
-    borderRadius: "6px",
+    padding: "12px",
+    borderRadius: "8px",
     transition: "background-color 0.2s",
+    cursor: "pointer",
   },
   transactionInfo: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
+    flex: 1,
   },
   transactionDot: {
     width: "8px",
@@ -672,6 +815,7 @@ const styles = {
     fontSize: "14px",
     fontWeight: "500",
     color: "#1f2937",
+    marginBottom: "2px",
   },
   transactionMeta: {
     fontSize: "12px",
@@ -680,6 +824,7 @@ const styles = {
   transactionAmount: {
     fontSize: "14px",
     fontWeight: "600",
+    whiteSpace: "nowrap",
   },
   topCategoriesGrid: {
     display: "grid",
@@ -691,6 +836,7 @@ const styles = {
     backgroundColor: "#f9fafb",
     borderRadius: "8px",
     border: "1px solid #e5e7eb",
+    transition: "transform 0.2s",
   },
   topCategoryHeader: {
     display: "flex",
@@ -720,9 +866,26 @@ const styles = {
     fontSize: "12px",
     color: "#6b7280",
   },
+  tipCard: {
+    backgroundColor: "#fef3c7",
+    border: "1px solid #f59e0b",
+    borderRadius: "8px",
+    padding: "16px",
+  },
+  tipTitle: {
+    fontSize: "16px",
+    fontWeight: "600",
+    color: "#92400e",
+    marginBottom: "8px",
+  },
+  tipText: {
+    fontSize: "14px",
+    color: "#92400e",
+    margin: 0,
+  },
 };
 
-// Add this to your global CSS or create a style tag
+// Add keyframes for spinner animation
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
   @keyframes spin {

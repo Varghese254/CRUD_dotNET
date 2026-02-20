@@ -259,3 +259,67 @@ _context.CreateConnection()
 QueryAsync<User>()
 → Dapper runs SQL query
 → Maps each row to User object
+
+frontend/
+└── crud-frontend/
+    ├── node_modules/
+    ├── public/
+    ├── src/
+    │   ├── assets/
+    │   ├── components/
+    │   │   └── ProtectedRoute.jsx
+    │   ├── pages/
+    │   │   ├── admin/
+    │   │   │   ├── AdminFooter.jsx
+    │   │   │   ├── AdminHeader.jsx
+    │   │   │   └── AdminHome.jsx
+    │   │   ├── user/
+    │   │   │   ├── UserFooter.jsx
+    │   │   │   ├── UserHeader.jsx
+    │   │   │   └── UserHome.jsx
+    │   │   ├── Signin.jsx
+    │   │   ├── Signup.jsx
+    │   │   └── Welcome.jsx
+    │   ├── api.js
+    │   ├── App.css
+    │   ├── App.jsx
+    │   ├── index.css
+    │   ├── main.jsx
+    │   └── output.css
+    ├── .gitignore
+    ├── eslint.config.js
+    ├── index.html
+    ├── package-lock.json
+    ├── package.json
+    ├── postcss.config.js
+    ├── README.md
+    ├── tailwind.config.js
+    └── vite.config.json
+
+
+
+backend/
+└── CrudApi/
+    ├── bin/
+    │   └── Debug/
+    │       └── net8.0/
+    ├── Controllers/
+    │   └── UserController.cs
+    ├── Data/
+    │   ├── DapperContext.cs
+    │   └── DbInitializer.cs
+    ├── DTOs/
+    │   ├── LoginDto.cs
+    │   └── RegisterDto.cs
+    ├── Models/
+    │   └── User.cs
+    ├── obj/
+    ├── Properties/
+    ├── Repositories/
+    │   └── UserRepository.cs
+    ├── Services/
+    ├── appsettings.Development.json
+    ├── appsettings.json
+    ├── CrudApi.csproj
+    ├── CrudApi.http
+    └── Program.cs

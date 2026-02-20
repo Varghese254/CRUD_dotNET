@@ -1,5 +1,6 @@
 using CrudApi.Data;
 using CrudApi.Repositories;
+using CrudApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -14,6 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<DbInitializer>();
 builder.Services.AddScoped<DapperContext>();
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<IEmailService, EmailService>(); // Add Email Service
 
 builder.Services.AddCors(options =>
 {

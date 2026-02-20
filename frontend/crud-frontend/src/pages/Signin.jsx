@@ -94,6 +94,14 @@ if (data.role === "admin") {
             Sign Up
           </Link>
         </p>
+        <div className="text-center mt-4">
+          <Link 
+            to="/forgot-password" 
+            className="text-sm text-sky-200 hover:text-white transition"
+          >
+            Forgot Password?
+          </Link>
+        </div>
       </div>
     </div>
   );

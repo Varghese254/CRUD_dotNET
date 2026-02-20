@@ -29,6 +29,24 @@ namespace CrudApi.Data
 
             using var connection = _context.CreateConnection();
             connection.Execute(createTableQuery);
+
+             // Create incomes table
+            var createIncomesTable = @"
+                CREATE TABLE IF NOT EXISTS incomes (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    user_id INT NOT NULL,
+                    amount DECIMAL(10,2) NOT NULL,
+                    category VARCHAR(50) NOT NULL,
+                    date DATE NOT NULL,
+                    description TEXT,
+                    is_recurring BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                    INDEX idx_user_date (user_id, date)
+                );";
+
+            connection.Execute(createIncomesTable);
         }
     }
 }

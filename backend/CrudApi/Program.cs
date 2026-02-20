@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
 // ---------------- SERVICES ----------------
 builder.Services.AddControllers();
@@ -15,6 +16,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<DbInitializer>();
 builder.Services.AddScoped<DapperContext>();
 builder.Services.AddScoped<UserRepository>();
+builder.Services.AddScoped<IncomeRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>(); // Add Email Service
 
 builder.Services.AddCors(options =>

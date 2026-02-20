@@ -26,9 +26,11 @@ function AddIncome() {
     setError('');
 
     try {
-      await api.post('/user/income', formData);
+      // ✅ FIXED: Changed from '/user/income' to '/income'
+      await api.post('/income', formData);
       navigate('/user/income');
     } catch (error) {
+      console.error('Error adding income:', error);
       setError(error.response?.data?.message || 'Failed to add income');
     } finally {
       setLoading(false);

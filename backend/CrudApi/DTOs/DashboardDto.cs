@@ -43,5 +43,6 @@ namespace CrudApi.DTOs
         public List<CategoryBreakdownDto> CategoryExpenses { get; set; } = new();
         public List<CategoryBreakdownDto> TopCategories { get; set; } = new();
         public List<RecentTransactionDto> RecentTransactions { get; set; } = new();
+        public BucketListSummaryDto? BucketListSummary { get; set; }
     }
 }

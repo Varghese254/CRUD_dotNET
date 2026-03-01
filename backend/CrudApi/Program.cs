@@ -19,7 +19,8 @@ builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<IncomeRepository>();
 builder.Services.AddScoped<ExpenseRepository>();
 builder.Services.AddScoped<DashboardRepository>();
-builder.Services.AddScoped<IEmailService, EmailService>(); // Add Email Service
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<BucketListRepository>();
 
 builder.Services.AddCors(options =>
 {

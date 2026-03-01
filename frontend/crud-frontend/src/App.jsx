@@ -19,6 +19,10 @@ import ExpenseList from "./pages/user/expense/ExpenseList";
 import AddExpense from "./pages/user/expense/AddExpense";
 import EditExpense from "./pages/user/expense/EditExpense";
 
+import BucketList from "./pages/user/bucketlist/BucketList";
+import AddBucketItem from "./pages/user/bucketlist/AddBucketItem";
+import EditBucketItem from "./pages/user/bucketlist/EditBucketItem";
+
 function App() {
   return (
     <Routes>
@@ -111,7 +115,35 @@ function App() {
 
       {/* Catch all - redirect to home */}
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+  path="/user/bucketlist"
+  element={
+    <ProtectedRoute role="user">
+      <BucketList />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/user/bucketlist/add"
+  element={
+    <ProtectedRoute role="user">
+      <AddBucketItem />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/user/bucketlist/edit/:id"
+  element={
+    <ProtectedRoute role="user">
+      <EditBucketItem />
+    </ProtectedRoute>
+  }
+/>
     </Routes>
+
+    
   );
 }
 

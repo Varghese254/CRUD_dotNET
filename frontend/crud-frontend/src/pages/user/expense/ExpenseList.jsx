@@ -1,7 +1,11 @@
+// pages/user/expense/ExpenseList.jsx
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PlusCircle, Edit, Trash2, Filter, ArrowLeft } from 'lucide-react';
 import api from '../../../api';
+import UserSidebar from '../UserSidebar';
+import UserHeader from '../UserHeader';
+import UserFooter from '../UserFooter';
 
 function ExpenseList() {
   const navigate = useNavigate();
@@ -11,6 +15,7 @@ function ExpenseList() {
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('expenses');
 
   useEffect(() => {
     fetchExpenses();
@@ -20,6 +25,16 @@ function ExpenseList() {
     try {
       setLoading(true);
       setError('');
+      
+      // Check if user is logged in
+      const token = localStorage.getItem("token");
+      const userStr = localStorage.getItem("user");
+      
+      if (!token || !userStr) {
+        navigate('/signin');
+        return;
+      }
+      
       const response = await api.get('/expense', {
         params: { month: filterMonth, year: filterYear }
       });
@@ -42,7 +57,12 @@ function ExpenseList() {
       setTotalExpense(parseFloat(response.data.total) || 0);
     } catch (error) {
       console.error('Error fetching expenses:', error);
-      setError(error.response?.data?.message || 'Failed to fetch expenses');
+      if (error.response?.status === 401) {
+        localStorage.clear();
+        navigate('/signin');
+      } else {
+        setError(error.response?.data?.message || 'Failed to fetch expenses');
+      }
     } finally {
       setLoading(false);
     }
@@ -60,6 +80,10 @@ function ExpenseList() {
     }
   };
 
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB');
@@ -75,149 +99,466 @@ function ExpenseList() {
 
   const getCategoryColor = (category) => {
     const colors = {
-      'Food & Dining': 'bg-orange-100 text-orange-800',
-      'Rent/Housing': 'bg-purple-100 text-purple-800',
-      'Travel': 'bg-blue-100 text-blue-800',
-      'Shopping': 'bg-pink-100 text-pink-800',
-      'Entertainment': 'bg-indigo-100 text-indigo-800',
-      'Healthcare': 'bg-red-100 text-red-800',
-      'Utilities': 'bg-yellow-100 text-yellow-800',
-      'Education': 'bg-green-100 text-green-800',
-      'Others': 'bg-gray-100 text-gray-800'
+      'Food & Dining': { bg: '#fff1f0', text: '#ef4444' },
+      'Rent/Housing': { bg: '#f3e8ff', text: '#9333ea' },
+      'Travel': { bg: '#dbeafe', text: '#1e40af' },
+      'Shopping': { bg: '#fce7f3', text: '#be185d' },
+      'Entertainment': { bg: '#e0e7ff', text: '#4f46e5' },
+      'Healthcare': { bg: '#fee2e2', text: '#b91c1c' },
+      'Utilities': { bg: '#fef3c7', text: '#b45309' },
+      'Education': { bg: '#dcfce7', text: '#166534' },
+      'Others': { bg: '#f3f4f6', text: '#4b5563' }
     };
-    return colors[category] || 'bg-gray-100 text-gray-800';
+    return colors[category] || { bg: '#f3f4f6', text: '#4b5563' };
   };
 
   return (
-    <div className="p-6">
-      {/* Header with back button */}
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() => navigate('/user/home')}
-          className="mr-4 p-2 hover:bg-gray-100 rounded-full"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Expense Management</h1>
-          <p className="text-gray-600">Track and manage your expenses</p>
-        </div>
-      </div>
+    <div style={styles.container}>
+      <UserHeader />
 
-      {/* Summary Card */}
-      <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-lg shadow-lg p-6 mb-6 text-white">
-        <p className="text-sm opacity-90">Total Expenses for {filterMonth}/{filterYear}</p>
-        <p className="text-3xl font-bold">{formatCurrency(totalExpense)}</p>
-      </div>
+      <div style={styles.mainContent}>
+        {/* Sidebar Navigation */}
+        <UserSidebar activeTab={activeTab} onTabChange={handleTabChange} />
 
-      {/* Filters and Add Button */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <Filter size={20} className="text-gray-500" />
-            <select
-              value={filterMonth}
-              onChange={(e) => setFilterMonth(parseInt(e.target.value))}
-              className="border rounded-lg px-3 py-2 focus:ring-red-500 focus:border-red-500"
-            >
-              {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
-                <option key={month} value={month}>
-                  {new Date(2000, month - 1, 1).toLocaleString('default', { month: 'long' })}
-                </option>
-              ))}
-            </select>
-            <select
-              value={filterYear}
-              onChange={(e) => setFilterYear(parseInt(e.target.value))}
-              className="border rounded-lg px-3 py-2 focus:ring-red-500 focus:border-red-500"
-            >
-              {[2023, 2024, 2025, 2026].map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+        {/* Main Content Area */}
+        <main style={styles.main}>
+          <div style={styles.contentWrapper}>
+            {/* Header with back button */}
+            <div style={styles.pageHeader}>
+              <button
+                onClick={() => navigate('/user/home')}
+                style={styles.backButton}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div>
+                <h1 style={styles.pageTitle}>Expense Management</h1>
+                <p style={styles.pageSubtitle}>Track and manage your expenses</p>
+              </div>
+            </div>
+
+            {/* Summary Card */}
+            <div style={styles.summaryCard}>
+              <p style={styles.summaryLabel}>Total Expenses for {filterMonth}/{filterYear}</p>
+              <p style={styles.summaryValue}>{formatCurrency(totalExpense)}</p>
+            </div>
+
+            {/* Filters and Add Button */}
+            <div style={styles.filtersCard}>
+              <div style={styles.filtersSection}>
+                <Filter size={20} style={styles.filterIcon} />
+                <select
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(parseInt(e.target.value))}
+                  style={styles.select}
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                    <option key={month} value={month}>
+                      {new Date(2000, month - 1, 1).toLocaleString('default', { month: 'long' })}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filterYear}
+                  onChange={(e) => setFilterYear(parseInt(e.target.value))}
+                  style={styles.select}
+                >
+                  {[2023, 2024, 2025, 2026].map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+              <Link
+                to="/user/expenses/add"
+                style={styles.addButton}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
+              >
+                <PlusCircle size={20} style={styles.addButtonIcon} />
+                Add Expense
+              </Link>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div style={styles.errorContainer}>
+                {error}
+              </div>
+            )}
+
+            {/* Expense List */}
+            <div style={styles.tableContainer}>
+              {loading ? (
+                <div style={styles.loadingContainer}>
+                  <div style={styles.loadingSpinner}></div>
+                  <p style={styles.loadingText}>Loading expenses...</p>
+                </div>
+              ) : expenses.length === 0 ? (
+                <div style={styles.emptyState}>
+                  <p style={styles.emptyStateText}>No expense entries for this period.</p>
+                  <Link
+                    to="/user/expenses/add"
+                    style={styles.emptyStateLink}
+                  >
+                    Add your first expense →
+                  </Link>
+                </div>
+              ) : (
+                <table style={styles.table}>
+                  <thead style={styles.tableHead}>
+                    <tr>
+                      <th style={styles.tableHeader}>Date</th>
+                      <th style={styles.tableHeader}>Category</th>
+                      <th style={styles.tableHeader}>Description</th>
+                      <th style={styles.tableHeader}>Amount</th>
+                      <th style={styles.tableHeader}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody style={styles.tableBody}>
+                    {expenses.map((expense) => {
+                      const categoryColor = getCategoryColor(expense.category);
+                      return (
+                        <tr 
+                          key={expense.id} 
+                          style={styles.tableRow}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <td style={styles.tableCell}>{formatDate(expense.date)}</td>
+                          <td style={styles.tableCell}>
+                            <span style={{
+                              ...styles.categoryBadge,
+                              backgroundColor: categoryColor.bg,
+                              color: categoryColor.text
+                            }}>
+                              {expense.category}
+                            </span>
+                          </td>
+                          <td style={styles.tableCell}>{expense.description || '-'}</td>
+                          <td style={{
+                            ...styles.tableCell,
+                            ...styles.amountCell,
+                            color: '#ef4444'
+                          }}>
+                            {formatCurrency(expense.amount)}
+                          </td>
+                          <td style={styles.tableCell}>
+                            <button
+                              onClick={() => navigate(`/user/expenses/edit/${expense.id}`)}
+                              style={styles.editButton}
+                              onMouseEnter={(e) => e.currentTarget.style.color = '#1d4ed8'}
+                              onMouseLeave={(e) => e.currentTarget.style.color = '#3b82f6'}
+                              title="Edit"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(expense.id)}
+                              style={styles.deleteButton}
+                              onMouseEnter={(e) => e.currentTarget.style.color = '#dc2626'}
+                              onMouseLeave={(e) => e.currentTarget.style.color = '#ef4444'}
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Quick Stats Card */}
+            {expenses.length > 0 && (
+              <div style={styles.statsCard}>
+                <h3 style={styles.statsTitle}>📊 Quick Statistics</h3>
+                <div style={styles.statsGrid}>
+                  <div style={styles.statItem}>
+                    <p style={styles.statLabel}>Total Entries</p>
+                    <p style={styles.statValue}>{expenses.length}</p>
+                  </div>
+                  <div style={styles.statItem}>
+                    <p style={styles.statLabel}>Average per Entry</p>
+                    <p style={styles.statValue}>{formatCurrency(totalExpense / expenses.length)}</p>
+                  </div>
+                  <div style={styles.statItem}>
+                    <p style={styles.statLabel}>Categories Used</p>
+                    <p style={styles.statValue}>{new Set(expenses.map(e => e.category)).size}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-          <Link
-            to="/user/expenses/add"
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center"
-          >
-            <PlusCircle size={20} className="mr-2" />
-            Add Expense
-          </Link>
-        </div>
+        </main>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
-          {error}
-        </div>
-      )}
-
-      {/* Expense List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        {loading ? (
-          <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-            <p className="mt-2 text-gray-500">Loading expenses...</p>
-          </div>
-        ) : expenses.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 mb-4">No expense entries for this period.</p>
-            <Link
-              to="/user/expenses/add"
-              className="text-red-600 hover:text-red-800 font-medium"
-            >
-              Add your first expense →
-            </Link>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {expenses.map((expense) => (
-                <tr key={expense.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">{formatDate(expense.date)}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-sm ${getCategoryColor(expense.category)}`}>
-                      {expense.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">{expense.description || '-'}</td>
-                  <td className="px-6 py-4 font-semibold text-red-600">
-                    {formatCurrency(expense.amount)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => navigate(`/user/expenses/edit/${expense.id}`)}
-                      className="text-blue-600 hover:text-blue-800 mr-3"
-                      title="Edit"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(expense.id)}
-                      className="text-red-600 hover:text-red-800"
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <UserFooter />
     </div>
   );
 }
+
+const styles = {
+  container: {
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: "#f3f4f6",
+  },
+  mainContent: {
+    display: "flex",
+    flex: 1,
+  },
+  main: {
+    flex: 1,
+    padding: "30px",
+    overflowY: "auto",
+  },
+  contentWrapper: {
+    maxWidth: "1200px",
+    margin: "0 auto",
+  },
+  pageHeader: {
+    display: "flex",
+    alignItems: "center",
+    marginBottom: "24px",
+  },
+  backButton: {
+    marginRight: "16px",
+    padding: "8px",
+    border: "none",
+    background: "none",
+    borderRadius: "9999px",
+    cursor: "pointer",
+    color: "#4b5563",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "background-color 0.2s",
+  },
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: "bold",
+    color: "#1f2937",
+    marginBottom: "4px",
+  },
+  pageSubtitle: {
+    fontSize: "14px",
+    color: "#6b7280",
+  },
+  summaryCard: {
+    background: "linear-gradient(to right, #ef4444, #dc2626)",
+    borderRadius: "8px",
+    padding: "24px",
+    marginBottom: "24px",
+    color: "white",
+    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+  },
+  summaryLabel: {
+    fontSize: "14px",
+    opacity: "0.9",
+    marginBottom: "4px",
+  },
+  summaryValue: {
+    fontSize: "36px",
+    fontWeight: "bold",
+  },
+  filtersCard: {
+    backgroundColor: "white",
+    padding: "16px 20px",
+    borderRadius: "8px",
+    marginBottom: "24px",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "16px",
+  },
+  filtersSection: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  },
+  filterIcon: {
+    color: "#6b7280",
+  },
+  select: {
+    border: "1px solid #d1d5db",
+    borderRadius: "6px",
+    padding: "8px 12px",
+    fontSize: "14px",
+    outline: "none",
+    cursor: "pointer",
+    backgroundColor: "white",
+  },
+  addButton: {
+    backgroundColor: "#ef4444",
+    color: "white",
+    padding: "8px 16px",
+    borderRadius: "6px",
+    textDecoration: "none",
+    display: "flex",
+    alignItems: "center",
+    fontSize: "14px",
+    fontWeight: "500",
+    transition: "background-color 0.2s",
+  },
+  addButtonIcon: {
+    marginRight: "8px",
+  },
+  errorContainer: {
+    backgroundColor: "#fee2e2",
+    color: "#b91c1c",
+    padding: "12px 16px",
+    borderRadius: "6px",
+    marginBottom: "20px",
+    border: "1px solid #ef4444",
+  },
+  tableContainer: {
+    backgroundColor: "white",
+    borderRadius: "8px",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+    overflow: "hidden",
+    marginBottom: "24px",
+  },
+  loadingContainer: {
+    textAlign: "center",
+    padding: "48px",
+  },
+  loadingSpinner: {
+    display: "inline-block",
+    width: "32px",
+    height: "32px",
+    border: "3px solid #e5e7eb",
+    borderTopColor: "#ef4444",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+    marginBottom: "12px",
+  },
+  loadingText: {
+    color: "#6b7280",
+    fontSize: "14px",
+  },
+  emptyState: {
+    textAlign: "center",
+    padding: "48px",
+  },
+  emptyStateText: {
+    color: "#6b7280",
+    marginBottom: "8px",
+  },
+  emptyStateLink: {
+    color: "#ef4444",
+    textDecoration: "none",
+    fontWeight: "500",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+  },
+  tableHead: {
+    backgroundColor: "#f9fafb",
+  },
+  tableHeader: {
+    padding: "12px 16px",
+    textAlign: "left",
+    fontSize: "12px",
+    fontWeight: "500",
+    color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+    borderBottom: "1px solid #e5e7eb",
+  },
+  tableBody: {
+    backgroundColor: "white",
+  },
+  tableRow: {
+    borderBottom: "1px solid #e5e7eb",
+    transition: "background-color 0.2s",
+    cursor: "pointer",
+  },
+  tableCell: {
+    padding: "16px",
+    fontSize: "14px",
+    color: "#1f2937",
+  },
+  amountCell: {
+    fontWeight: "600",
+  },
+  categoryBadge: {
+    display: "inline-block",
+    padding: "4px 12px",
+    borderRadius: "9999px",
+    fontSize: "12px",
+    fontWeight: "500",
+  },
+  editButton: {
+    border: "none",
+    background: "none",
+    color: "#3b82f6",
+    marginRight: "12px",
+    cursor: "pointer",
+    padding: "4px",
+    transition: "color 0.2s",
+  },
+  deleteButton: {
+    border: "none",
+    background: "none",
+    color: "#ef4444",
+    cursor: "pointer",
+    padding: "4px",
+    transition: "color 0.2s",
+  },
+  statsCard: {
+    backgroundColor: "white",
+    borderRadius: "8px",
+    padding: "20px",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+  },
+  statsTitle: {
+    fontSize: "16px",
+    fontWeight: "600",
+    color: "#1f2937",
+    marginBottom: "16px",
+  },
+  statsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+    gap: "16px",
+  },
+  statItem: {
+    textAlign: "center",
+    padding: "12px",
+    backgroundColor: "#f9fafb",
+    borderRadius: "6px",
+  },
+  statLabel: {
+    fontSize: "12px",
+    color: "#6b7280",
+    marginBottom: "4px",
+  },
+  statValue: {
+    fontSize: "18px",
+    fontWeight: "600",
+    color: "#ef4444",
+  },
+};
+
+// Add keyframes for spinner animation
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  select:hover, button:hover {
+    opacity: 0.9;
+  }
+`;
+document.head.appendChild(styleSheet);
 
 export default ExpenseList;

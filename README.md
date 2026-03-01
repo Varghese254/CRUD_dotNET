@@ -323,3 +323,97 @@ backend/
     ├── CrudApi.csproj
     ├── CrudApi.http
     └── Program.cs
+
+
+##################################################
+
+frontend/
+└── crud-frontend/
+    ├── node_modules/
+    ├── public/
+    ├── src/
+    │   ├── assets/
+    │   ├── components/
+    │   │   └── ProtectedRoute.jsx
+    │   ├── pages/
+    │   │   ├── admin/
+    │   │   │   ├── AdminFooter.jsx
+    │   │   │   ├── AdminHeader.jsx
+    │   │   │   └── AdminHome.jsx
+    │   │   └── user/
+    │   │       ├── expense/
+    │   │       │   ├── AddExpense.jsx
+    │   │       │   ├── EditExpense.jsx
+    │   │       │   └── ExpenseList.jsx
+    │   │       ├── income/
+    │   │       │   ├── AddIncome.jsx
+    │   │       │   ├── EditIncome.jsx
+    │   │       │   └── IncomeList.jsx
+    │   │       ├── ForgotPassword.jsx
+    │   │       ├── ResetPassword.jsx
+    │   │       ├── Signin.jsx
+    │   │       ├── Signup.jsx
+    │   │       ├── UserFooter.jsx
+    │   │       ├── UserHeader.jsx
+    │   │       ├── UserHome.jsx
+    │   │       ├── VerifyOtp.jsx
+    │   │       └── Welcome.jsx
+    │   ├── api.js
+    │   ├── App.css
+    │   ├── App.jsx
+    │   ├── index.css
+    │   ├── main.jsx
+    │   ├── output.css
+    │   ├── .gitignore
+    │   ├── eslint.config.js
+    │   ├── index.html
+    │   ├── package-lock.json
+    │   ├── package.json
+    │   ├── postcss.config.js
+    │   ├── README.md
+    │   ├── tailwind.config.js
+    │   └── vite.config.js
+
+
+
+#########################################################################3
+
+    backend/
+└── CrudApi/
+    ├── bin/
+    ├── Controllers/
+    │   ├── DashboardController.cs
+    │   ├── ExpenseController.cs
+    │   ├── IncomeController.cs
+    │   └── UserController.cs
+    ├── Data/
+    │   ├── DapperContext.cs
+    │   └── DbInitializer.cs
+    ├── DTOs/
+    │   ├── DashboardDto.cs
+    │   ├── ExpenseDto.cs
+    │   ├── ForgotPasswordDto.cs
+    │   ├── IncomeDto.cs
+    │   ├── LoginDto.cs
+    │   ├── RegisterDto.cs
+    │   ├── ResetPasswordDto.cs
+    │   └── VerifyOtpDto.cs
+    ├── Models/
+    │   ├── Expense.cs
+    │   ├── Income.cs
+    │   └── User.cs
+    ├── obj/
+    ├── Properties/
+    ├── Repositories/
+    │   ├── DashboardRepository.cs
+    │   ├── ExpenseRepository.cs
+    │   ├── IncomeRepository.cs
+    │   └── UserRepository.cs
+    ├── Services/
+    │   ├── EmailService.cs
+    │   └── IEmailService.cs
+    ├── appsettings.Development.json
+    ├── appsettings.json
+    ├── CrudApi.csproj
+    ├── CrudApi.http
+    └── Program.cs

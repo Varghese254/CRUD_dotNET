@@ -1,12 +1,13 @@
+// pages/user/UserHome.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserHeader from "./UserHeader";
 import UserFooter from "./UserFooter";
+import UserSidebar from "./UserSidebar";
 import api from "../../api";
 import { 
   DollarSign, TrendingUp, TrendingDown, Wallet, 
-  PlusCircle, PieChart, List, Home, 
-  BarChart3, Target, Settings
+  PlusCircle, PieChart, List, BarChart3, Target, Settings, Home
 } from 'lucide-react';
 
 function UserHome() {
@@ -33,54 +34,54 @@ function UserHome() {
   }, []);
 
   const fetchDashboardData = async () => {
-  try {
-    setLoading(true);
-    setError('');
-    
-    // Check if user is logged in
-    const token = localStorage.getItem("token");
-    const userStr = localStorage.getItem("user");
-    
-    console.log('Auth Check:', { 
-      hasToken: !!token, 
-      hasUser: !!userStr,
-      token: token ? `${token.substring(0, 20)}...` : 'No token'
-    });
-    
-    if (!token || !userStr) {
-      console.log('No token or user found, redirecting to login');
-      navigate('/signin');
-      return;
-    }
-    
-    const currentDate = new Date();
-    const response = await api.get('/dashboard', {
-      params: { 
-        month: currentDate.getMonth() + 1, 
-        year: currentDate.getFullYear() 
-      }
-    });
-    
-    console.log('Dashboard data received:', response.data);
-    setDashboardData(response.data);
-  } catch (error) {
-    console.error('Error fetching dashboard data:', error);
-    
-    if (error.response?.status === 401) {
-      setError('Your session has expired. Please login again.');
-      // Clear invalid data
-      localStorage.clear();
-      // Redirect to login after a short delay
-      setTimeout(() => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Check if user is logged in
+      const token = localStorage.getItem("token");
+      const userStr = localStorage.getItem("user");
+      
+      console.log('Auth Check:', { 
+        hasToken: !!token, 
+        hasUser: !!userStr,
+        token: token ? `${token.substring(0, 20)}...` : 'No token'
+      });
+      
+      if (!token || !userStr) {
+        console.log('No token or user found, redirecting to login');
         navigate('/signin');
-      }, 2000);
-    } else {
-      setError('Failed to load dashboard data. Please try again.');
+        return;
+      }
+      
+      const currentDate = new Date();
+      const response = await api.get('/dashboard', {
+        params: { 
+          month: currentDate.getMonth() + 1, 
+          year: currentDate.getFullYear() 
+        }
+      });
+      
+      console.log('Dashboard data received:', response.data);
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      
+      if (error.response?.status === 401) {
+        setError('Your session has expired. Please login again.');
+        // Clear invalid data
+        localStorage.clear();
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          navigate('/signin');
+        }, 2000);
+      } else {
+        setError('Failed to load dashboard data. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Get current month and year
   const currentMonth = new Date().toLocaleString('default', { month: 'long' });
@@ -90,16 +91,8 @@ function UserHome() {
   const hasNoData = dashboardData.summary.totalIncome === 0 && 
                     dashboardData.summary.totalExpense === 0;
 
-  // Navigation items
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/user/home' },
-    { id: 'income', label: 'Income', icon: TrendingUp, path: '/user/income' },
-    { id: 'expenses', label: 'Expenses', icon: TrendingDown, path: '/user/expenses' },
-    { id: 'budget', label: 'Budget', icon: Wallet, path: '/user/budget' },
-    { id: 'reports', label: 'Reports', icon: BarChart3, path: '/user/reports' },
-    { id: 'bucketlist', label: 'Bucket List', icon: Target, path: '/user/bucketlist' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/user/settings' }
-  ];
+  // Get only the 3 most recent transactions
+  const recentTransactions = dashboardData.recentTransactions?.slice(0, 3) || [];
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -117,6 +110,16 @@ function UserHome() {
       month: 'short',
       year: 'numeric'
     });
+  };
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+  };
+
+  const handleViewAllTransactions = () => {
+    // Navigate to a page that shows both income and expenses
+    // You can create a dedicated transactions page or navigate to income/expenses
+    navigate('/user/income'); // or you can create a '/user/transactions' page
   };
 
   if (loading) {
@@ -140,29 +143,7 @@ function UserHome() {
 
       <div style={styles.mainContent}>
         {/* Sidebar Navigation */}
-        <aside style={styles.sidebar}>
-          <nav style={styles.nav}>
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    navigate(item.path);
-                  }}
-                  style={{
-                    ...styles.navItem,
-                    ...(activeTab === item.id ? styles.navItemActive : {})
-                  }}
-                >
-                  <Icon size={20} style={styles.navIcon} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </aside>
+        <UserSidebar activeTab={activeTab} onTabChange={handleTabChange} />
 
         {/* Main Content Area */}
         <main style={styles.main}>
@@ -225,8 +206,9 @@ function UserHome() {
                 </div>
               </div>
 
-              {/* Summary Cards */}
+              {/* Summary Cards - This shows the balance, income, expense, and savings */}
               <div style={styles.cardGrid}>
+                {/* Total Income Card */}
                 <div style={styles.summaryCard}>
                   <div style={styles.cardContent}>
                     <div>
@@ -241,6 +223,7 @@ function UserHome() {
                   </div>
                 </div>
 
+                {/* Total Expenses Card */}
                 <div style={styles.summaryCard}>
                   <div style={styles.cardContent}>
                     <div>
@@ -255,6 +238,7 @@ function UserHome() {
                   </div>
                 </div>
 
+                {/* Current Balance Card */}
                 <div style={styles.summaryCard}>
                   <div style={styles.cardContent}>
                     <div>
@@ -282,6 +266,7 @@ function UserHome() {
                   </div>
                 </div>
 
+                {/* Monthly Savings Card */}
                 <div style={styles.summaryCard}>
                   <div style={styles.cardContent}>
                     <div>
@@ -377,21 +362,21 @@ function UserHome() {
                   )}
                 </div>
 
-                {/* Recent Transactions */}
+                {/* Recent Transactions - Now showing only 3 */}
                 <div style={styles.sectionCard}>
                   <div style={styles.sectionHeader}>
                     <h2 style={styles.sectionTitle}>Recent Transactions</h2>
                     <button 
-                      onClick={() => navigate('/user/income')}
+                      onClick={handleViewAllTransactions}
                       style={styles.viewAllButton}
                     >
-                      View All
+                      View All ({dashboardData.recentTransactions?.length || 0})
                     </button>
                   </div>
                   
-                  {dashboardData.recentTransactions && dashboardData.recentTransactions.length > 0 ? (
+                  {recentTransactions.length > 0 ? (
                     <div style={styles.transactionList}>
-                      {dashboardData.recentTransactions.map((transaction) => (
+                      {recentTransactions.map((transaction) => (
                         <div 
                           key={`${transaction.type}-${transaction.id}`} 
                           style={styles.transactionItem}
@@ -424,6 +409,13 @@ function UserHome() {
                           </p>
                         </div>
                       ))}
+                      
+                      {/* Show indicator if there are more transactions */}
+                      {dashboardData.recentTransactions?.length > 3 && (
+                        <div style={styles.viewMoreIndicator}>
+                          <p>+ {dashboardData.recentTransactions.length - 3} more transactions</p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div style={styles.emptyState}>
@@ -484,38 +476,6 @@ const styles = {
   mainContent: {
     display: "flex",
     flex: 1,
-  },
-  sidebar: {
-    width: "250px",
-    backgroundColor: "white",
-    borderRight: "1px solid #e5e7eb",
-    padding: "20px 0",
-  },
-  nav: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  navItem: {
-    display: "flex",
-    alignItems: "center",
-    padding: "12px 24px",
-    border: "none",
-    background: "none",
-    width: "100%",
-    textAlign: "left",
-    cursor: "pointer",
-    fontSize: "14px",
-    color: "#4b5563",
-    transition: "all 0.2s",
-    borderLeft: "3px solid transparent",
-  },
-  navItemActive: {
-    backgroundColor: "#eff6ff",
-    color: "#3b82f6",
-    borderLeft: "3px solid #3b82f6",
-  },
-  navIcon: {
-    marginRight: "12px",
   },
   main: {
     flex: 1,
@@ -825,6 +785,14 @@ const styles = {
     fontSize: "14px",
     fontWeight: "600",
     whiteSpace: "nowrap",
+  },
+  viewMoreIndicator: {
+    textAlign: "center",
+    padding: "8px",
+    color: "#6b7280",
+    fontSize: "12px",
+    borderTop: "1px dashed #e5e7eb",
+    marginTop: "4px",
   },
   topCategoriesGrid: {
     display: "grid",

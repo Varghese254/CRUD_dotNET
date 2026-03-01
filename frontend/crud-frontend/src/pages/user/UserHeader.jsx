@@ -20,7 +20,12 @@ function UserHeader() {
   return (
     <header style={styles.header}>
       <div style={styles.leftSection}>
-        <button onClick={goToDashboard} style={styles.homeButton}>
+        <button 
+          onClick={goToDashboard} 
+          style={styles.homeButton}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+        >
           <Home size={20} />
           <span style={styles.logoText}>FinTrack</span>
         </button>
@@ -31,7 +36,18 @@ function UserHeader() {
           <User size={18} />
           <span style={styles.userName}>{user.name || 'User'}</span>
         </div>
-        <button onClick={handleLogout} style={styles.logoutButton}>
+        <button 
+          onClick={handleLogout} 
+          style={styles.logoutButton}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.25)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)';
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
+          }}
+        >
           <LogOut size={18} />
           <span>Logout</span>
         </button>
@@ -67,10 +83,21 @@ const styles = {
     padding: "8px 12px",
     borderRadius: "6px",
     transition: "background-color 0.2s",
+    // Remove text cursor (I-beam) that might appear
+    userSelect: "none", // Prevent text selection
+    WebkitUserSelect: "none", // For Safari
+    MozUserSelect: "none", // For Firefox
+    msUserSelect: "none", // For IE/Edge
   },
   logoText: {
     fontSize: "20px",
     fontWeight: "600",
+    // Ensure no cursor blinking on the text
+    cursor: "pointer",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    MozUserSelect: "none",
+    msUserSelect: "none",
   },
   rightSection: {
     display: "flex",
@@ -85,12 +112,18 @@ const styles = {
     backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: "20px",
     fontSize: "14px",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    MozUserSelect: "none",
+    msUserSelect: "none",
+    cursor: "default",
   },
   userName: {
     maxWidth: "150px",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
+    cursor: "default",
   },
   logoutButton: {
     display: "flex",
@@ -103,7 +136,11 @@ const styles = {
     borderRadius: "6px",
     cursor: "pointer",
     fontSize: "14px",
-    transition: "background-color 0.2s",
+    transition: "all 0.2s",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    MozUserSelect: "none",
+    msUserSelect: "none",
   },
 };
 
